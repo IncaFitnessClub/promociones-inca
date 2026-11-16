@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="es-AR" class="no-js">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Botón de arrepentimiento · Inca Fitness Club</title>
+  <meta name="description" content="Cancelá tu compra online de Inca Fitness Club dentro de los 10 días corridos, sin registrarte.">
+  <meta name="theme-color" content="#343333">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicon-32.png">
+  <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
+  <link rel="stylesheet" href="css/styles.css?v=2">
+  <script>document.documentElement.className=document.documentElement.className.replace('no-js','js');</script>
+  <script src="promos.js?v=2" defer></script>
+</head>
+<body class="pagina-legal">
+
+<header class="cabecera">
+  <div class="wrap">
+    <a href="index.html"><img src="assets/img/logo-inca-crema.webp" width="640" height="361" alt="Inca Fitness Club · volver a la promo"></a>
+    <a class="volver" href="index.html">Volver a la promo</a>
+  </div>
+</header>
+
+<main class="wrap legal">
+  <p class="ceja">Resolución 424/2020</p>
+  <h1>Botón de arrepentimiento</h1>
+  <p>Si compraste online, tenés <strong>10 días corridos</strong> desde la compra para cancelarla, sin costo y sin explicar por qué. No hace falta registrarte. Completá este formulario y te enviamos un <strong>código de identificación</strong> de tu pedido dentro de las 24 horas.</p>
+
+  <form class="form" id="form-arrepentimiento" novalidate>
+    <div class="campo">
+      <label class="campo__label" for="a-nombre">Nombre y apellido</label>
+      <input id="a-nombre" name="nombre" type="text" autocomplete="name" required maxlength="80">
+      <p class="campo__error" data-error="nombre" hidden>Escribí tu nombre y apellido.</p>
+    </div>
+    <div class="campo">
+      <label class="campo__label" for="a-dni">DNI</label>
+      <input id="a-dni" name="dni" type="text" inputmode="numeric" required maxlength="12">
+      <p class="campo__error" data-error="dni" hidden>Escribí tu DNI, solo números.</p>
+    </div>
+    <div class="campo">
+      <label class="campo__label" for="a-email">Email</label>
+      <input id="a-email" name="email" type="email" autocomplete="email" required maxlength="120">
+      <p class="campo__ayuda">Te mandamos el código a este email.</p>
+      <p class="campo__error" data-error="email" hidden>Revisá el email.</p>
+    </div>
+    <div class="campo">
+      <label class="campo__label" for="a-whatsapp">WhatsApp <span class="campo__opcional">(opcional)</span></label>
+      <input id="a-whatsapp" name="whatsapp" type="tel" inputmode="tel" autocomplete="tel" maxlength="20">
+    </div>
+    <div class="campo">
+      <label class="campo__label" for="a-sede">Sede</label>
+      <select id="a-sede" name="sede" required>
+        <option value="">Elegí la sede</option>
+        <option>Ciudad</option><option>Godoy Cruz</option><option>Guaymallén</option><option>Carrodilla</option><option>Tupungato</option>
+      </select>
+      <p class="campo__error" data-error="sede" hidden>Elegí la sede.</p>
+    </div>
+    <div class="campo">
+      <label class="campo__label" for="a-fecha">Fecha de compra</label>
+      <input id="a-fecha" name="fechaCompra" type="date" required>
+      <p class="campo__error" data-error="fechaCompra" hidden>Indicá la fecha de compra.</p>
+    </div>
+    <div class="campo">
+      <label class="campo__label" for="a-pago">Cómo pagaste</label>
+      <select id="a-pago" name="medioPago">
+        <option>Transferencia</option>
+        <option>Tarjeta de crédito</option>
+      </select>
+    </div>
+    <div class="campo">
+      <label class="campo__label" for="a-operacion">Número de operación o comprobante <span class="campo__opcional">(opcional)</span></label>
+      <input id="a-operacion" name="operacion" type="text" maxlength="60">
+    </div>
+    <div class="campo">
+      <label class="campo__label" for="a-comentario">Comentario <span class="campo__opcional">(opcional)</span></label>
+      <textarea id="a-comentario" name="comentario" maxlength="500"></textarea>
+    </div>
+    <div class="trampa" aria-hidden="true"><label>No completar <input name="website" tabindex="-1" autocomplete="off"></label></div>
+    <button type="submit" class="btn btn--ancho"><span class="btn__txt">Enviar pedido de arrepentimiento</span></button>
+    <noscript><p>Si no podés usar este formulario, escribí a <a href="mailto:holasomosinca@gmail.com?subject=Bot%C3%B3n%20de%20arrepentimiento">holasomosinca@gmail.com</a> con tu nombre, DNI, sede y fecha de compra.</p></noscript>
+  </form>
+
+  <div class="codigo" id="resultado" hidden tabindex="-1" aria-live="polite"></div>
+
+  <h2>Qué pasa después</h2>
+  <ul>
+    <li>Guardá tu código: identifica tu pedido.</li>
+    <li>Te contactamos para coordinar el reintegro por el mismo medio de pago.</li>
+    <li>¿Dudas? Escribinos a <a href="mailto:holasomosinca@gmail.com">holasomosinca@gmail.com</a>.</li>
+  </ul>
+</main>
+
+<footer class="pie">
+  <div class="wrap">
+    <p><a class="volver" href="terminos.html" style="color:var(--crema)">Términos y condiciones</a></p>
+    <p class="pie__copy">© 2026 Inca Fitness Club · Mendoza, Argentina</p>
+  </div>
+</footer>
+
+<script>
+/* Botón de arrepentimiento: genera el código, lo guarda en la planilla y ofrece enviarlo por email. */
+document.addEventListener('DOMContentLoaded', () => {
+  const form = document.getElementById('form-arrepentimiento');
+  const res = document.getElementById('resultado');
+  const A = (window.INCA && window.INCA.ajustes) || {};
+  const email = A.emailContacto || 'holasomosinca@gmail.com';
+  const reglas = {
+    nombre: (v) => v.trim().length >= 2,
+    dni: (v) => /^\d{6,9}$/.test(v.replace(/\D/g, '')),
+    email: (v) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v.trim()),
+    sede: (v) => !!v,
+    fechaCompra: (v) => !!v
+  };
+  const validar = (el) => {
+    const ok = reglas[el.name](el.value);
+    const err = form.querySelector(`[data-error="${el.name}"]`);
+    el.setAttribute('aria-invalid', String(!ok));
+    if (err) { err.id = err.id || 'error-' + el.name; err.hidden = ok; ok ? el.removeAttribute('aria-describedby') : el.setAttribute('aria-describedby', err.id); }
+    return ok;
+  };
+  Object.keys(reglas).forEach((n) => form.elements[n].addEventListener('blur', (e) => { if (e.target.value) validar(e.target); }));
+
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    if (form.elements.website.value) return;
+    const malos = Object.keys(reglas).map((n) => form.elements[n]).filter((el) => !validar(el));
+    if (malos.length) { malos[0].focus(); return; }
+
+    const hoy = new Date();
+    const pad = (n) => String(n).padStart(2, '0');
+    const azar = Math.random().toString(36).slice(2, 6).toUpperCase();
+    const codigo = `ARR-${hoy.getFullYear()}${pad(hoy.getMonth() + 1)}${pad(hoy.getDate())}-${azar}`;
+    const datos = { tipo: 'arrepentimiento', codigo, fecha: hoy.toISOString() };
+    ['nombre', 'dni', 'email', 'whatsapp', 'sede', 'fechaCompra', 'medioPago', 'operacion', 'comentario'].forEach((n) => { datos[n] = form.elements[n].value.trim(); });
+
+    let enviado = false;
+    const url = (A.urlPlanilla || '').trim();
+    if (url) {
+      const body = new URLSearchParams(datos);
+      try { enviado = navigator.sendBeacon ? navigator.sendBeacon(url, body) : false; } catch (err) { enviado = false; }
+      if (!enviado) { fetch(url, { method: 'POST', mode: 'no-cors', body, keepalive: true }).catch(() => {}); enviado = true; }
+    }
+
+    const cuerpo = `Pedido de arrepentimiento\nCódigo: ${codigo}\nNombre: ${datos.nombre}\nDNI: ${datos.dni}\nEmail: ${datos.email}\nWhatsApp: ${datos.whatsapp}\nSede: ${datos.sede}\nFecha de compra: ${datos.fechaCompra}\nMedio de pago: ${datos.medioPago}\nOperación: ${datos.operacion}\nComentario: ${datos.comentario}`;
+    const mailto = `mailto:${email}?subject=${encodeURIComponent('Botón de arrepentimiento ' + codigo)}&body=${encodeURIComponent(cuerpo)}`;
+    const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    res.innerHTML = `
+      <p class="ceja">Tu código de arrepentimiento</p>
+      <p class="codigo__valor">${esc(codigo)}</p>
+      <p>${enviado
+        ? `Recibimos tu pedido. Te lo confirmamos por email a <strong>${esc(datos.email)}</strong> dentro de las 24 horas.`
+        : 'Para terminar, mandanos tu pedido por email con el botón de abajo.'}</p>
+      <a class="${enviado ? 'boton-linea' : 'btn btn--ancho'}" href="${mailto}"><span class="btn__txt">${enviado ? 'Enviar también por email' : 'Enviar pedido por email'}</span></a>`;
+    form.hidden = true;
+    res.hidden = false;
+    res.focus();
+  });
+});
+</script>
+</body>
+</html>
