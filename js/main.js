@@ -30,13 +30,32 @@
   const sedePorId = (id) => D.sedes.find((s) => s.id === id);
   const set = (sel, txt) => { const el = $(sel); if (el && txt) el.textContent = txt; };
   const pad = (n) => String(n).padStart(2, '0');
-  // 650000 → "$650.000" (igual en cualquier celular)
+  // 780000 → "$780.000" (igual en cualquier celular)
   const pesos = (n) => '$' + String(Math.round(Number(n) || 0)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-  const ahorroDe = (s) => (Number(s.precioMensual) || 0) * 12 - (Number(s.precioAnual) || 0);
+  // "5492612533809" → "261 253-3809"
+  const telVisible = (n) => {
+    let x = String(n).replace(/\D/g, '');
+    if (x.startsWith('549')) x = x.slice(3);
+    if (x.length !== 10) return x;
+    return x.startsWith('261') ? `${x.slice(0, 3)} ${x.slice(3, 6)}-${x.slice(6)}` : `${x.slice(0, 4)} ${x.slice(4, 6)}-${x.slice(6)}`;
+  };
   const FLECHA = '<svg class="btn__flecha" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="M4 12h15M13 5l7 7-7 7"/></svg>';
   const CHEVRON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>';
   const ICONO_WA = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2Zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8s-.4-.1-.6.1-.7.8-.8 1-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.2-.4.2-.4.7-1.3a.4.4 0 0 0 0-.4l-.8-1.9c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.7 11.8 11.8 0 0 0 4.5 4c1.7.7 2.3.8 3.2.6a2.7 2.7 0 0 0 1.8-1.2 2.2 2.2 0 0 0 .2-1.2c-.1-.1-.3-.2-.6-.3Z"/></svg>';
   const ICONO_MAPA = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M12 22s7-6.2 7-12a7 7 0 1 0-14 0c0 5.8 7 12 7 12Z"/><circle cx="12" cy="10" r="2.5"/></svg>';
+
+  /* ---------- Precio y cuotas (salen de promos.js) ---------- */
+  const PRECIO = Number(P.precio) || 0;
+  const CUOTAS = (Array.isArray(P.cuotas) && P.cuotas.length ? P.cuotas : [1]).map(Number).filter((c) => c > 0).sort((a, b) => a - b);
+  const MAX_CUOTAS = CUOTAS[CUOTAS.length - 1];
+  const POR_MES = PRECIO / 12;
+  // "También en 1 pago o en 3 cuotas sin interés de $260.000, o con débito directo (CBU)."
+  const textoOtrasFormas = () => {
+    const otras = CUOTAS.filter((c) => c !== MAX_CUOTAS).map((c) => (c === 1 ? '1 pago' : `${c} cuotas sin interés de ${pesos(PRECIO / c)}`));
+    let t = otras.length ? `También en ${otras.join(' o en ')}` : '';
+    if (P.debitoCBU) t += t ? ', o con débito directo (CBU)' : 'También con débito directo (CBU)';
+    return t ? t + '.' : '';
+  };
 
   /* ---------- Estado de la promo: antes / activa / terminada ---------- */
   const desde = Date.parse(P.ventaDesde);
@@ -56,7 +75,7 @@
   const DIAS = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
   const arg = (ts) => new Date(ts - 3 * 3600000);
   const fechaCorta = (ts) => { if (isNaN(ts)) return ''; const f = arg(ts); return `${DIAS[f.getUTCDay()]} ${f.getUTCDate()}/${f.getUTCMonth() + 1}`; };
-  const hora = (ts) => { const f = arg(ts); return `${f.getUTCHours()}:${pad(f.getUTCMinutes())}`; };   // "21:00"
+  const hora = (ts) => { const f = arg(ts); return `${f.getUTCHours()}:${pad(f.getUTCMinutes())}`; };   // "23:59"
   const fechaHora = (ts) => { if (isNaN(ts)) return ''; const f = arg(ts); return f.getUTCHours() || f.getUTCMinutes() ? `${fechaCorta(ts)} · ${hora(ts)}` : fechaCorta(ts); };
   const falta = (ms) => {
     const m = Math.max(0, Math.floor(ms / 60000));
@@ -71,15 +90,10 @@
     if (E === 'activa') return isNaN(hasta) ? '' : `La promo termina en ${falta(hasta - t)}`;
     return 'La promo terminó. Escribinos para conocer los planes vigentes.';
   };
+  const promoNombre = () => (P.cinta ? `promo ${P.cinta}` : 'promo');
   const mensajeDudas = (s) => (E === 'terminada'
-    ? `¡Hola Inca ${s.nombre}! Vi que terminó la promo del plan anual. ¿Qué planes tienen ahora?`
-    : `¡Hola Inca ${s.nombre}! Vi la promo del plan anual y tengo una consulta: `);
-  const textoMedios = () => {
-    const m = [];
-    if (P.pagoTransferencia !== false) m.push('por transferencia');
-    if (P.pagoTarjeta !== false || (P.cuotas && P.cuotas.activa)) m.push('con tarjeta de crédito');
-    return m.join(' o ');
-  };
+    ? `¡Hola Inca ${s.nombre}! Vi que terminó la ${promoNombre()}. ¿Qué planes tienen ahora?`
+    : `¡Hola Inca ${s.nombre}! Vi la ${promoNombre()} del plan anual y tengo una consulta: `);
 
   /* ---------- Diálogos ---------- */
   let dialogosAbiertos = 0;
@@ -119,16 +133,21 @@
      1. PRIMERA PANTALLA Y TEXTOS
      ===================================================================== */
   function portada() {
-    set('[data-ceja]', E === 'terminada' ? 'Promo finalizada' : P.ceja);
-    set('[data-gigante]', P.numeroGigante);
-    set('[data-titular]', P.titular);
-    set('[data-sello-a]', P.selloArriba);
-    const b = $('[data-sello-b]');
-    if (b) { if (P.selloAbajo) b.textContent = P.selloAbajo; else b.remove(); }
+    if (P.cinta) {
+      $$('[data-cinta] span').forEach((s) => { s.textContent = P.cinta; });
+      set('[data-cinta-sr]', E === 'terminada' ? `Promo ${P.cinta} finalizada` : `Promo ${P.cinta}`);
+    }
+    const h1 = $('[data-titular]');
+    if (h1 && Array.isArray(P.titular) && P.titular.length) {
+      h1.innerHTML = P.titular.map((l, i, a) => `<span class="linea${i === a.length - 1 ? ' golpe' : ''}">${esc(l)}</span>`).join(' ');
+    }
+    set('[data-oferta-arriba]', P.ofertaArriba);
+    set('[data-oferta-grande]', P.ofertaGrande);
+    const abajo = $('[data-oferta-abajo]');
+    if (abajo) { if (P.ofertaAbajo) abajo.textContent = P.ofertaAbajo; else abajo.remove(); }
     $$('[data-cta-texto]').forEach((el) => { el.textContent = E === 'terminada' ? 'Consultar planes vigentes' : (P.botonPortada || el.textContent); });
     set('[data-sello-cierre]', E === 'terminada' ? 'Promo finalizada' : `Hasta el ${fechaHora(hasta)}`);
-    const min = Math.min(...D.sedes.map((s) => Number(s.precioAnual) || Infinity));
-    if (isFinite(min)) set('[data-barra-precio]', `Un solo pago · desde ${pesos(min)}`);
+    set('[data-barra-precio]', `Hasta ${MAX_CUOTAS} cuotas sin interés`);
   }
 
   // Contador de la primera pantalla + textos de estado. Se actualiza cada segundo.
@@ -164,13 +183,15 @@
   }
 
   /* =====================================================================
-     2. SEDES CON SU PRECIO, CONDICIONES Y WHATSAPP DE DUDAS
+     2. SEDES (tarjetas de la página), CONDICIONES Y WHATSAPP DE DUDAS
      ===================================================================== */
+  const chips = (s) => (Array.isArray(s.actividades) && s.actividades.length
+    ? `<ul class="chips" aria-label="Actividades">${s.actividades.map((a) => `<li class="chip">${esc(a)}</li>`).join('')}</ul>` : '');
+
   function sedes() {
     const ul = $('[data-sedes]');
     if (ul) {
       ul.innerHTML = D.sedes.map((s) => {
-        const ahorro = ahorroDe(s);
         const accion = E === 'terminada'
           ? `<a class="btn btn--compacto" href="${wa(s.whatsapp, mensajeDudas(s))}" target="_blank" rel="noopener"><span class="btn__txt">Consultar planes</span>${FLECHA}</a>`
           : `<button type="button" class="btn btn--compacto" data-elegir-sede="${esc(s.id)}"><span class="btn__txt">Quiero mi plan acá</span>${FLECHA}</button>`;
@@ -180,11 +201,16 @@
             <h3 class="sede__nombre">${esc(s.nombre)}</h3>
             <p class="sede__dir">${esc(s.direccion)}</p>
           </div>
-          ${E === 'terminada' ? '' : `<p class="sede__precio"><span class="sede__monto">${pesos(s.precioAnual)}</span>${ahorro > 0 ? `<span class="sede__ahorro">Ahorrás ${pesos(ahorro)}</span>` : ''}</p>`}
+          ${chips(s)}
+          ${E === 'terminada' ? '' : `<div class="sede__precio">
+            <p class="sede__monto">${pesos(PRECIO)}</p>
+            <p class="sede__cuotas">Hasta ${MAX_CUOTAS} cuotas <strong>sin interés</strong> de ${pesos(PRECIO / MAX_CUOTAS)}</p>
+            ${P.mostrarPorMes ? `<p class="sede__mes">Equivale a ${pesos(POR_MES)} por mes · ${esc((P.textoPorMes || '').toLowerCase())}</p>` : ''}
+          </div>`}
           <div class="sede__acciones">
             ${accion}
+            <a class="boton-linea" href="${wa(s.whatsapp, mensajeDudas(s))}" target="_blank" rel="noopener">${ICONO_WA}WhatsApp</a>
             <a class="boton-linea" href="${mapa(s.direccion)}" target="_blank" rel="noopener">${ICONO_MAPA}Cómo llegar</a>
-            <a class="boton-linea" href="${wa(s.whatsapp, `¡Hola Inca ${s.nombre}! Quiero info del plan anual.`)}" target="_blank" rel="noopener">${ICONO_WA}WhatsApp</a>
           </div>
         </li>`;
       }).join('');
@@ -197,13 +223,13 @@
     if (lw) {
       lw.innerHTML = D.sedes.map((s) => `
         <li><a href="${wa(s.whatsapp, mensajeDudas(s))}" target="_blank" rel="noopener">
-          <span><strong>${esc(s.nombre)}</strong><br><span>${esc(s.direccion)}</span></span>${ICONO_WA}
+          <span><strong>${esc(s.nombre)}</strong><br><span>${esc(telVisible(s.whatsapp))} · ${esc(s.direccion)}</span></span>${ICONO_WA}
         </a></li>`).join('');
     }
   }
 
   /* =====================================================================
-     3. COMPRA: elegir sede → ver precio → elegir forma de pago → pagar
+     3. COMPRA: elegir sede → ver el plan de esa sede → ir al portal de pago
      ===================================================================== */
   function utm() {
     const q = new URLSearchParams(location.search);
@@ -217,32 +243,13 @@
   }
   const UTM = utm();
 
-  // Anota en la planilla qué sede y qué forma de pago eligió (sin datos personales). Nunca frena la compra.
+  // Anota en la planilla qué sede eligió al ir a pagar (sin datos personales). Nunca frena la compra.
   function enviarPlanilla(datos) {
     const url = (A.urlPlanilla || '').trim();
     if (!url) return;
     const body = new URLSearchParams(Object.assign({ promo: P.nombre, pagina: location.origin + location.pathname, fecha: new Date().toISOString() }, datos, UTM));
     try { if (navigator.sendBeacon && navigator.sendBeacon(url, body)) return; } catch (e) { /* sigue con fetch */ }
     fetch(url, { method: 'POST', mode: 'no-cors', body, keepalive: true }).catch(() => {});
-  }
-
-  function inyectarHTML(cont, codigo) {           // para el botón que da la procesadora
-    cont.innerHTML = codigo;
-    $$('script', cont).forEach((viejo) => {
-      const s = d.createElement('script');
-      [...viejo.attributes].forEach((a) => s.setAttribute(a.name, a.value));
-      s.text = viejo.textContent;
-      viejo.replaceWith(s);
-    });
-  }
-
-  function mediosDe(s) {
-    const m = [];
-    if (P.pagoTransferencia !== false) m.push({ tipo: 'transferencia', nombre: 'Transferencia', detalle: `Al alias de Inca ${s.nombre}` });
-    if (P.pagoTarjeta !== false) m.push({ tipo: 'tarjeta', nombre: 'Tarjeta de crédito', detalle: '1 solo pago', linkPago: (s.linkTarjeta || '').trim(), botonPago: s.botonTarjeta || '' });
-    if (P.cuotas && P.cuotas.activa) m.push({ tipo: 'tarjeta', nombre: P.cuotas.nombre || 'Tarjeta en cuotas', detalle: P.cuotas.detalle || '', linkPago: (s.linkCuotas || '').trim(), botonPago: '' });
-    if (!m.length) m.push({ tipo: 'whatsapp', nombre: 'Por WhatsApp', detalle: 'Tu sede te pasa cómo pagar' });
-    return m;
   }
 
   function compra() {
@@ -252,9 +259,8 @@
     $$('[data-vista]', dlg).forEach((v) => { vistas[v.dataset.vista] = v; });
     const paso = $('[data-hoja-paso]', dlg);
     const atras = $('[data-atras]', dlg);
-    const PASOS = { sedes: 'Paso 1 de 3', precio: 'Paso 2 de 3', pago: 'Paso 3 de 3', final: 'Paso 3 de 3' };
+    const PASOS = { sedes: 'Paso 1 de 2', precio: 'Paso 2 de 2' };
     let sede = null;
-    let medios = [];
     let actual = null;
     let historial = [];
 
@@ -291,80 +297,43 @@
 
     function pintarPrecio() {
       const s = sede;
-      const ahorro = ahorroDe(s);
-      const mensual = Number(s.precioMensual) || 0;
-      const cuotasPagas = mensual ? Number(s.precioAnual) / mensual : NaN;
-      const boton = E === 'antes'
-        ? `<a class="btn btn--ancho" href="${wa(s.whatsapp, `¡Hola Inca ${s.nombre}! Quiero el plan anual de la ${P.ceja || 'promo'} (${pesos(s.precioAnual)}). ¿Me avisan el ${fechaCorta(desde)} cuando arranque?`)}" target="_blank" rel="noopener" data-aviso>
-             <span class="btn__txt">Avisame cuando arranque</span>${FLECHA}</a>`
-        : `<button type="button" class="btn btn--ancho" data-adherir><span class="btn__txt">${esc(P.botonAdherir || 'Adherirme al plan anual')}</span>${FLECHA}</button>`;
+      const link = (s.linkPago || '').trim();
+      let boton;
+      if (E === 'antes') {
+        boton = `<a class="btn btn--ancho" href="${wa(s.whatsapp, `¡Hola Inca ${s.nombre}! Quiero el plan anual de la ${promoNombre()}. ¿Me avisan el ${fechaCorta(desde)} cuando arranque?`)}" target="_blank" rel="noopener" data-aviso>
+             <span class="btn__txt">Avisame cuando arranque</span>${FLECHA}</a>`;
+      } else if (link) {
+        boton = `<a class="btn btn--ancho" href="${esc(link)}" data-ir-pago><span class="btn__txt">${esc(P.botonPago || 'Quiero mi plan anual')}</span>${FLECHA}</a>`;
+      } else {                                   // sin link de pago: cierra la venta por WhatsApp
+        boton = `<a class="btn btn--ancho" href="${wa(s.whatsapp, `¡Hola Inca ${s.nombre}! Quiero el plan anual de la ${promoNombre()}. ¿Cómo lo pago?`)}" target="_blank" rel="noopener"><span class="btn__txt">${esc(P.botonPago || 'Quiero mi plan anual')}</span>${FLECHA}</a>`;
+      }
+      const ayuda = E === 'antes'
+        ? `La promo arranca el ${esc(fechaHora(desde))}.`
+        : link
+          ? 'Pago seguro · al entrar, tocá <strong>Plan anual</strong>'
+          : 'Te escribís con la sede por WhatsApp para pagar';
+      const otras = textoOtrasFormas();
       vistas.precio.innerHTML = `
         <h2 class="vista__titulo" id="v-precio-titulo" tabindex="-1">Tu plan anual en <span>${esc(s.nombre)}</span></h2>
-        <div class="vista__fila"><p>12 meses · 1 sola sede</p><button type="button" class="enlace" data-cambiar-sede>Cambiar sede</button></div>
-        <div class="precio-final">
-          ${ahorro > 0 ? `<p class="precio-final__antes">12 meses de cuota: <s>${pesos(mensual * 12)}</s></p>` : ''}
-          <p class="precio-final__monto">${pesos(s.precioAnual)}</p>
-          <p class="precio-final__detalle">1 solo pago · ${esc(textoMedios())}</p>
+        <div class="vista__fila">
+          <a class="wa-link" href="${wa(s.whatsapp, mensajeDudas(s))}" target="_blank" rel="noopener">${ICONO_WA}<span>WhatsApp <strong>${esc(telVisible(s.whatsapp))}</strong></span></a>
+          <button type="button" class="enlace" data-cambiar-sede>Cambiar sede</button>
         </div>
-        ${ahorro > 0 ? `<p class="sello sello--chico" aria-hidden="true"><span class="sello__a">Ahorrás ${pesos(ahorro)}</span>${Number.isInteger(cuotasPagas) && cuotasPagas < 12 ? `<span class="sello__b">Pagás ${cuotasPagas} cuotas, entrenás 12</span>` : ''}</p>
-        <p class="sr-only">Ahorrás ${pesos(ahorro)} frente a pagar 12 cuotas de ${pesos(mensual)}.</p>` : ''}
+        ${chips(s)}
+        <div class="precio-final">
+          <p class="precio-final__monto">${pesos(PRECIO)}</p>
+          <p class="precio-final__cuotas">Hasta ${MAX_CUOTAS} cuotas <span class="resalte">sin interés</span> de ${pesos(PRECIO / MAX_CUOTAS)}</p>
+          ${otras ? `<p class="precio-final__detalle">${esc(otras)}</p>` : ''}
+        </div>
+        ${P.mostrarPorMes ? `<p class="sello sello--chico sello--mes" aria-hidden="true"><span class="sello__pre">Equivale a</span><span class="sello__a">${pesos(POR_MES)} por mes</span>${P.textoPorMes ? `<span class="sello__b">${esc(P.textoPorMes)}</span>` : ''}</p>
+        <p class="sr-only">Equivale a ${pesos(POR_MES)} por mes. ${esc(P.textoPorMes || '')}.</p>` : ''}
         <ul class="incluye">${(P.incluye || []).map((i) => `<li>${esc(i)}</li>`).join('')}</ul>
+        <p class="estado" data-estado>${esc(textoEstado())}</p>
+        <p class="form__legal form__legal--izq">Al comprar aceptás los <a href="terminos.html" target="_blank" rel="noopener">términos y condiciones</a>. En el portal de pago te piden nombre, email, DNI y teléfono.</p>
         <div class="vista__accion">
-          <p class="estado" data-estado>${esc(textoEstado())}</p>
           ${boton}
-          <p class="form__legal">Al adherirte aceptás los <a href="terminos.html" target="_blank" rel="noopener">términos y condiciones</a>.</p>
+          <p class="form__legal">${ayuda}</p>
         </div>`;
-    }
-
-    function pintarPago() {
-      vistas.pago.innerHTML = `
-        <h2 class="vista__titulo" id="v-pago-titulo" tabindex="-1">¿Cómo querés pagar?</h2>
-        <p class="form__resumen">Plan anual en ${esc(sede.nombre)} · ${pesos(sede.precioAnual)}</p>
-        <ul class="eleccion-lista">${medios.map((m, i) => `
-          <li><button type="button" class="eleccion" data-medio="${i}">
-            <span class="eleccion__nombre">${esc(m.nombre)}</span>
-            ${m.detalle ? `<span class="eleccion__detalle">${esc(m.detalle)}</span>` : ''}${CHEVRON}
-          </button></li>`).join('')}</ul>`;
-    }
-
-    function pintarFinal(m) {
-      const s = sede;
-      const monto = pesos(s.precioAnual);
-      const plan = `plan anual de la ${P.ceja || 'promo'} (${monto})`;
-      let h = '';
-      if (m.tipo === 'transferencia') {
-        const tieneDatos = s.alias || s.cbu;
-        const dato = (label, valor) => (valor ? `<div class="dato"><span class="dato__label">${label}</span><span class="dato__valor">${esc(valor)}</span><button type="button" class="copiar" data-copiar="${esc(valor)}">Copiar</button></div>` : '');
-        h = `<h2 class="vista__titulo" id="v-final-titulo" tabindex="-1">Transferí ${monto}</h2>
-             <p>A la cuenta de Inca ${esc(s.nombre)}:</p>
-             ${tieneDatos
-               ? `<div class="datos-banco">${dato('Alias', s.alias)}${dato('CBU', s.cbu)}${s.titular ? `<div class="dato"><span class="dato__label">Titular</span><span class="dato__valor">${esc(s.titular)}</span></div>` : ''}</div>`
-               : `<p class="form__resumen">Pedile el alias a tu sede por WhatsApp: te lo pasan al toque.</p>`}
-             <p>Después mandá el comprobante por WhatsApp. Tu plan queda confirmado cuando la sede lo recibe.</p>
-             <a class="btn btn--ancho" href="${wa(s.whatsapp, tieneDatos
-               ? `¡Hola Inca ${s.nombre}! Me adherí al ${plan}. Ya hice la transferencia y les mando el comprobante. Mi nombre es: `
-               : `¡Hola Inca ${s.nombre}! Quiero adherirme al ${plan} y pagar por transferencia. ¿Me pasan el alias?`)}" target="_blank" rel="noopener">
-               <span class="btn__txt">${tieneDatos ? 'Mandar comprobante' : 'Pedir alias por WhatsApp'}</span>${FLECHA}</a>`;
-      } else if (m.linkPago) {
-        h = `<h2 class="vista__titulo" id="v-final-titulo" tabindex="-1">¡Vamos!</h2>
-             <p>Te llevamos al pago seguro con ${esc(m.nombre.toLowerCase())}.</p>
-             <a class="btn btn--ancho" href="${esc(m.linkPago)}" data-ir-pago><span class="btn__txt">Ir a pagar ${monto}</span>${FLECHA}</a>`;
-      } else if (m.botonPago) {
-        h = `<h2 class="vista__titulo" id="v-final-titulo" tabindex="-1">Último paso</h2>
-             <p>Tocá el botón para pagar ${monto} con ${esc(m.nombre.toLowerCase())}.</p>
-             <div class="boton-pago-externo" data-boton-pago></div>`;
-      } else {
-        h = `<h2 class="vista__titulo" id="v-final-titulo" tabindex="-1">Último paso</h2>
-             <p>Pedí tu link de pago por WhatsApp a Inca ${esc(s.nombre)} y te lo mandan al toque.</p>
-             <a class="btn btn--ancho" href="${wa(s.whatsapp, `¡Hola Inca ${s.nombre}! Quiero adherirme al ${plan} y pagar con ${m.nombre.toLowerCase()}. ¿Me pasan el link de pago?`)}" target="_blank" rel="noopener">
-               <span class="btn__txt">Pedir link de pago</span>${FLECHA}</a>`;
-      }
-      vistas.final.innerHTML = h;
-      const cont = $('[data-boton-pago]', vistas.final);
-      if (cont) inyectarHTML(cont, m.botonPago);
-      enviarPlanilla({ tipo: 'eligio-pago', sede: s.nombre, precio: monto, pago: m.nombre });
-      mostrar('final');
-      if (m.linkPago && m.tipo !== 'transferencia') setTimeout(() => { location.href = m.linkPago; }, 700);   // va solo al pago
     }
 
     // Botones de afuera que abren la hoja
@@ -387,28 +356,8 @@
       if (bSede) { sede = sedePorId(bSede.dataset.sede); pintarPrecio(); mostrar('precio'); return; }
       if (t.closest('[data-cambiar-sede]')) { mostrar('sedes'); return; }
       if (t.closest('[data-atras]')) { if (historial.length) mostrar(historial.pop(), true); return; }
-      if (t.closest('[data-aviso]')) { enviarPlanilla({ tipo: 'aviso', sede: sede.nombre, precio: pesos(sede.precioAnual), pago: '' }); return; }
-      if (t.closest('[data-adherir]')) {
-        medios = mediosDe(sede);
-        if (medios.length === 1) pintarFinal(medios[0]);
-        else { pintarPago(); mostrar('pago'); }
-        return;
-      }
-      const bMedio = t.closest('[data-medio]');
-      if (bMedio) { pintarFinal(medios[Number(bMedio.dataset.medio)]); return; }
-      const c = t.closest('[data-copiar]');
-      if (c) {
-        const v = c.dataset.copiar;
-        const ok = () => { c.textContent = 'Copiado'; setTimeout(() => { c.textContent = 'Copiar'; }, 1800); };
-        const aMano = () => {                     // respaldo para navegadores que no dejan usar el portapapeles
-          const ta = d.createElement('textarea'); ta.value = v; ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.opacity = '0';
-          dlg.appendChild(ta); ta.select();
-          try { if (d.execCommand('copy')) ok(); } catch (err) { /* nada */ }
-          ta.remove();
-        };
-        if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(v).then(ok).catch(aMano);
-        else aMano();
-      }
+      if (t.closest('[data-aviso]')) { enviarPlanilla({ tipo: 'aviso', sede: sede.nombre, precio: pesos(PRECIO), pago: '' }); return; }
+      if (t.closest('[data-ir-pago]')) { enviarPlanilla({ tipo: 'fue-a-pagar', sede: sede.nombre, precio: pesos(PRECIO), pago: 'PagoTIC' }); }   // sigue al link
     });
   }
 

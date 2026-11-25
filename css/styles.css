@@ -116,17 +116,32 @@ ul,ol{padding:0;list-style:none}
 .portada__fondo{position:absolute;inset:0;z-index:-1;background:var(--carbon)}
 .portada__fondo video{width:100%;height:100%;object-fit:cover;filter:grayscale(1) contrast(1.1) brightness(.4)}
 /* Velo carbón: más oscuro donde va el texto, para que se lea siempre
-   (medido cuadro por cuadro: el 365 naranja queda con contraste 3:1 o más) */
+   (medido cuadro por cuadro: el naranja grande queda con contraste 3:1 o más) */
 .portada__fondo::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(52,51,51,.5) 0%,rgba(52,51,51,.78) 22%,rgba(52,51,51,.84) 55%,rgba(52,51,51,.93) 100%)}
-.portada__inner{display:flex;flex-direction:column;gap:clamp(10px,2.2svh,24px);padding-block:clamp(12px,2.4svh,26px) calc(clamp(14px,2.6svh,28px) + env(safe-area-inset-bottom))}
-.portada__logo{width:124px;height:auto;flex:none}                   /* manual: nunca menos de 120 de ancho */
-.portada__centro{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;gap:clamp(8px,1.6svh,16px)}
-.portada__titulo{font-family:var(--font-display);font-weight:800;text-transform:uppercase}
-.portada__num{display:block;color:var(--naranja);font-size:min(46vw,22svh);line-height:.8;letter-spacing:-.045em;margin-left:-.05em;padding-top:.04em}
-.portada__txt{display:block;font-size:min(8.2vw,5.4svh);line-height:.94;letter-spacing:-.005em;margin-top:.3em;max-width:14ch}
-.portada__sello{margin-top:6px}
+.portada__inner{display:flex;flex-direction:column;gap:clamp(8px,1.8svh,20px);padding-block:clamp(10px,2svh,22px) calc(clamp(14px,2.6svh,28px) + env(safe-area-inset-bottom))}
+.portada__top{display:flex;justify-content:flex-end}
+.portada__logo{width:120px;height:auto;flex:none}                   /* manual: nunca menos de 120 de ancho */
+
+/* Cinta "Black Week": de lado a lado, inclinada como el sello, con el texto que se repite */
+/* El margen de arriba crece con el ancho: cuanto más ancha la pantalla, más sube la punta derecha de la cinta */
+.cinta{position:relative;z-index:1;width:120vw;margin:max(clamp(4px,1.2svh,12px),calc(4vw - 8px)) calc(50% - 60vw) clamp(4px,1.2svh,12px);transform:rotate(var(--tilt));background:var(--crema);color:var(--carbon);overflow:hidden;padding:.42em 0 .36em}
+.cinta__pista{display:flex;width:max-content}
+.cinta__pista span{display:inline-flex;align-items:center;font-family:var(--font-display);font-weight:800;font-size:clamp(1.125rem,5vw,1.5rem);line-height:1;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap}
+.cinta__pista span::after{content:"";width:.45em;height:.45em;margin:0 .85em;background:var(--naranja);transform:rotate(45deg)}
+@media (prefers-reduced-motion:no-preference){.cinta__pista{animation:cinta 28s linear infinite}}
+@keyframes cinta{to{transform:translateX(-50%)}}
+
+.portada__centro{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;gap:clamp(12px,2.6svh,26px)}
+.portada__titulo{font-family:var(--font-display);font-weight:800;text-transform:uppercase;font-size:min(14.4vw,8.4svh);line-height:.9;letter-spacing:-.01em}
+.portada__titulo .linea{display:block}
+.portada__titulo .golpe{color:var(--naranja)}
+
+/* La oferta: bloque naranja inclinado, con "sin interés" como lo más grande */
+.oferta{display:inline-flex;flex-direction:column;align-items:flex-start;margin:6px 0 0 4px;padding:.5em .7em .6em;background:var(--naranja);color:var(--carbon);font-family:var(--font-display);font-weight:800;text-transform:uppercase;line-height:.92;transform:rotate(var(--tilt));transform-origin:20% 60%}
+.oferta__arriba{font-size:max(1.1875rem,min(6.6vw,3.9svh))}
+.oferta__grande{font-size:max(1.75rem,min(12.6vw,7.4svh));letter-spacing:-.01em}
+.oferta__abajo{font-family:var(--font-body);font-size:max(1.1875rem,min(5.4vw,3.3svh));letter-spacing:.02em;margin-top:.32em}
 .portada__accion{display:grid;gap:clamp(10px,1.8svh,16px)}
-@media (max-height:640px){.portada .sello__b{display:none}}
 
 /* Contador hasta el cierre de la promo */
 .contador{display:grid;gap:8px}
@@ -139,27 +154,34 @@ ul,ol{padding:0;list-style:none}
 .contador__caja small{font-size:.8125rem;font-weight:600;color:var(--muted-dark)}
 
 @media (min-width:900px){
-  .portada__inner{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,.75fr);grid-template-rows:auto 1fr auto;column-gap:clamp(40px,6vw,96px);padding-block:28px 44px}
-  .portada__logo{width:150px}
+  .portada__inner{position:relative;z-index:1;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,.7fr);grid-template-rows:auto auto 1fr auto;column-gap:clamp(40px,6vw,96px);padding-block:24px 44px}
   .portada__inner > *{grid-column:1}
+  .portada__inner > .portada__top,.portada__inner > .cinta{grid-column:1 / -1}
+  .portada__logo{width:140px}
+  /* En pantallas anchas la cinta se inclina menos, para no pisar el logo */
+  .cinta{transform:rotate(-2.5deg);margin-block:30px 6px}
   .portada__accion{max-width:520px}
-  .portada__txt{max-width:16ch}
-  .portada__sello{margin-top:14px}
-  /* En la compu el video va enmarcado a la derecha, sin texto encima */
-  .portada__fondo{--c:var(--chaflan-lg);inset:auto;z-index:0;top:50%;right:max(var(--gutter),calc((100vw - var(--maxw)) / 2));height:min(84vh,780px);aspect-ratio:9/16;translate:0 -50%;clip-path:polygon(var(--c) 0,calc(100% - var(--c)) 0,100% var(--c),100% calc(100% - var(--c)),calc(100% - var(--c)) 100%,var(--c) 100%,0 calc(100% - var(--c)),0 var(--c))}
-  .portada__fondo video{filter:grayscale(1) contrast(1.05) brightness(.9)}
-  .portada__fondo::after{background:rgba(52,51,51,.18)}
-  .portada__inner{position:relative;z-index:1}
+  .portada__titulo{font-size:clamp(3.4rem,6.2vw,5.8rem)}
+  .oferta__arriba{font-size:2rem}
+  .oferta__grande{font-size:3.75rem}
+  .oferta__abajo{font-size:1.375rem}
+  /* En la compu el video va en un panel alto a la derecha, casi a su tamaño real
+     (así no se pixela), con los bordes difuminados para que se funda con el fondo y el texto */
+  .portada__fondo{inset:0 auto 0 calc(64% - 37.5vh);height:100%;aspect-ratio:3/4;-webkit-mask-image:linear-gradient(90deg,transparent 0%,#000 30%,#000 70%,transparent 100%);mask-image:linear-gradient(90deg,transparent 0%,#000 30%,#000 70%,transparent 100%)}
+  .portada__fondo video{filter:grayscale(1) contrast(1.1) brightness(.6)}
+  .portada__fondo::after{background:linear-gradient(90deg,rgba(52,51,51,.72) 0%,rgba(52,51,51,.35) 45%,rgba(52,51,51,.35) 100%)}
 }
 
-/* Firma: el 365 entra deslizándose, el sello cae y el botón da un empujón.
+/* Firma: "movimiento" sube a su lugar, la oferta cae como un sello y el botón da un empujón.
    El titular y el botón NO se ocultan nunca: se ven desde el primer instante. */
 @media (prefers-reduced-motion:no-preference){
-  .portada--play .portada__num{animation:num-in .8s var(--ease) both}
-  .portada--play .portada__sello{animation:sello-cae .42s var(--ease-pop) .45s both}
+  .portada--play .portada__titulo .golpe{animation:sube .7s var(--ease) both}
+  .portada--play .oferta{animation:oferta-cae .42s var(--ease-pop) .45s both}
   .portada--play .portada__btn{animation:empuje .5s var(--ease) 1s both}
 }
-@keyframes num-in{from{transform:translateY(10%) scale(.94)}to{transform:none}}
+@keyframes sube{from{transform:translateY(18%)}to{transform:none}}
+/* La oferta cae apenas inclinada: aunque la animación no corra, nunca tapa el titular */
+@keyframes oferta-cae{from{transform:rotate(-7deg) scale(1.05)}to{transform:rotate(var(--tilt)) scale(1)}}
 @keyframes sello-in{from{transform:rotate(-16deg) scale(1.8);opacity:0}to{transform:rotate(var(--tilt)) scale(1);opacity:1}}
 /* El sello de la primera pantalla nunca arranca invisible: solo cae y se acomoda */
 @keyframes sello-cae{from{transform:rotate(-14deg) scale(1.35)}to{transform:rotate(var(--tilt)) scale(1)}}
@@ -186,9 +208,16 @@ ul,ol{padding:0;list-style:none}
 .sede{--c:var(--chaflan);display:grid;gap:16px;align-content:start;padding:22px 20px 20px;background:var(--blanco);color:var(--carbon);clip-path:polygon(var(--c) 0,calc(100% - var(--c)) 0,100% var(--c),100% calc(100% - var(--c)),calc(100% - var(--c)) 100%,var(--c) 100%,0 calc(100% - var(--c)),0 var(--c))}
 .sede__nombre{font-family:var(--font-display);font-weight:800;text-transform:uppercase;font-size:1.75rem;line-height:1}
 .sede__dir{color:var(--gris-claro);font-size:.9375rem;line-height:1.35;margin-top:6px}
-.sede__precio{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px}
+.sede__precio{display:grid;gap:4px}
 .sede__monto{font-family:var(--font-display);font-weight:800;font-size:clamp(2.2rem,10vw,2.75rem);line-height:.9;letter-spacing:-.02em;white-space:nowrap}
-.sede__ahorro{background:var(--naranja);color:var(--carbon);font-weight:800;font-size:1.1875rem;line-height:1;padding:.3em .5em;text-transform:uppercase;letter-spacing:.02em;rotate:var(--tilt)}
+.sede__cuotas{font-weight:600;font-size:1.0625rem}
+.sede__cuotas strong{font-weight:800;text-transform:uppercase;box-shadow:inset 0 -.32em 0 var(--naranja)}
+.sede__mes{font-size:.9375rem;color:var(--gris-claro)}
+
+/* Actividades de cada sede */
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{padding:.38em .62em .32em;background:var(--crema);color:var(--carbon);font-weight:800;font-size:.8125rem;line-height:1;letter-spacing:.07em;text-transform:uppercase}
+.vista .chip{background:var(--blanco)}
 .sede__acciones{display:flex;flex-wrap:wrap;gap:10px}
 .sede__acciones .btn{flex:1 1 100%}
 .boton-linea{display:inline-flex;align-items:center;gap:.5em;min-height:44px;padding:.5em 1em;border:2px solid var(--carbon);font-weight:800;font-size:.9375rem;letter-spacing:.04em;text-transform:uppercase;text-decoration:none;color:var(--carbon);background:transparent;transition:transform var(--t-hover) var(--ease)}
@@ -322,7 +351,7 @@ body{padding-bottom:76px}
 .vista__titulo span{background:linear-gradient(transparent 64%,var(--naranja) 64%);padding-inline:.04em}
 .vista__nota{font-size:.9375rem;color:var(--muted)}
 :where(.vista) > p{font-size:1.0625rem}
-.vista__fila{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:4px 12px;margin-top:-8px}
+.vista__fila{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:0 12px;margin-top:-10px}
 .vista__fila p{font-weight:600;color:var(--muted)}
 .enlace{min-height:44px;border:0;background:none;padding:0;color:var(--carbon);font-weight:800;font-size:1rem;text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:4px;cursor:pointer}
 
@@ -338,18 +367,25 @@ body{padding-bottom:76px}
 
 /* Precio de la sede elegida */
 .precio-final{--c:var(--chaflan);display:grid;gap:6px;padding:18px 18px 16px;background:var(--blanco);clip-path:polygon(var(--c) 0,calc(100% - var(--c)) 0,100% var(--c),100% calc(100% - var(--c)),calc(100% - var(--c)) 100%,var(--c) 100%,0 calc(100% - var(--c)),0 var(--c))}
-.precio-final__antes{font-weight:600;font-size:1rem;color:var(--gris-claro)}
-.precio-final__antes s{text-decoration-thickness:2px}
 .precio-final__monto{font-family:var(--font-display);font-weight:800;font-size:clamp(3rem,17vw,4.75rem);line-height:.88;letter-spacing:-.025em;white-space:nowrap}
-.precio-final__detalle{font-weight:600;font-size:1rem}
+.precio-final__cuotas{font-weight:800;font-size:1.1875rem;line-height:1.25;margin-top:4px}
+.resalte{text-transform:uppercase;box-shadow:inset 0 -.36em 0 var(--naranja)}
+.precio-final__detalle{font-size:.9375rem;line-height:1.35;color:var(--gris-claro)}
+.sello__pre{font-family:var(--font-body);font-size:1.1875rem;letter-spacing:.02em;margin-bottom:.12em}
+.sello--mes .sello__a{font-size:1.75rem}
+/* WhatsApp de la sede, como link */
+.wa-link{display:inline-flex;align-items:center;gap:.45em;min-height:44px;color:var(--carbon);font-weight:600;font-size:1rem;text-decoration:none}
+.wa-link svg{width:22px;height:22px;flex:none}
+.wa-link strong{font-weight:800;text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px}
 .vista .sello{justify-self:start;margin:4px 0 2px 4px}
 .incluye{display:grid;gap:10px;border-top:1px solid var(--line);padding-top:16px}
 .incluye li{display:grid;grid-template-columns:18px 1fr;gap:10px;align-items:start;line-height:1.35}
 .incluye li::before{content:"";width:12px;height:12px;margin-top:.3em;background:var(--naranja);clip-path:polygon(3px 0,9px 0,12px 3px,12px 9px,9px 12px,3px 12px,0 9px,0 3px)}
 .vista .estado{font-size:.9375rem}
 /* El botón de pago queda siempre a la vista, pegado abajo de la hoja */
-.vista__accion{position:sticky;bottom:0;z-index:1;display:grid;gap:10px;margin:0 -20px calc(-24px - env(safe-area-inset-bottom));padding:12px 20px calc(14px + env(safe-area-inset-bottom));background:var(--crema);border-top:1px solid var(--line)}
+.vista__accion{position:sticky;bottom:0;z-index:1;display:grid;gap:8px;margin:0 -20px calc(-24px - env(safe-area-inset-bottom));padding:12px 20px calc(12px + env(safe-area-inset-bottom));background:var(--crema);border-top:1px solid var(--line)}
 .form__legal{font-size:.875rem;color:var(--muted);text-align:center}
+.form__legal--izq{text-align:left;margin-top:-6px}
 .form__resumen{font-weight:800;font-size:1.0625rem;padding:12px 14px;background:var(--blanco);border-left:4px solid var(--naranja)}
 
 /* Pago: datos de transferencia y botón de la procesadora */
