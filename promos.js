@@ -62,7 +62,7 @@ window.INCA = {
 
     // Condiciones que se ven en la sección de sedes
     condiciones: [
-      "Plan anual de 12 meses para entrenar en una sola sede: la elegís al comprar y no se puede cambiar de sede.",
+      "Plan anual, 12 meses para entrenar en la sede donde lo adquirís.",
       "Precio final: $780.000 en todas las sedes, con matrícula bonificada.",
       "Con tarjeta de crédito, en 1, 3 o 6 cuotas sin interés, según las tarjetas habilitadas en el portal de pago. También por débito directo (CBU).",
       "Promo válida para compras del viernes 27/11/2026 a las 00:00 al viernes 4/12/2026 a las 23:59 (hora de Argentina)."
