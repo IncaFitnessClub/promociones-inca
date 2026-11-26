@@ -95,6 +95,29 @@
     ? `¡Hola Inca ${s.nombre}! Vi que terminó la ${promoNombre()}. ¿Qué planes tienen ahora?`
     : `¡Hola Inca ${s.nombre}! Vi la ${promoNombre()} del plan anual y tengo una consulta: `);
 
+  /* ---------- Píxel de Meta (solo si hay un número en promos.js) ----------
+     Eventos: PageView al entrar · ViewContent al ver el plan de una sede ·
+     InitiateCheckout al ir al portal de pago · Contact al tocar un WhatsApp ·
+     Lead al pedir aviso (cuando la promo todavía no arrancó). */
+  let pixelActivo = false;
+  let medir = () => {};
+  function pixel() {
+    const id = String(A.pixelMeta || '').replace(/\D/g, '');
+    if (!id) return;
+    /* eslint-disable */
+    !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,d,'script','https://connect.facebook.net/en_US/fbevents.js');
+    /* eslint-enable */
+    window.fbq('init', id);
+    window.fbq('track', 'PageView');
+    pixelActivo = true;
+    medir = (evento, datos) => { try { window.fbq('track', evento, datos || {}); } catch (e) { /* nada */ } };
+    // Cualquier WhatsApp de la página cuenta como contacto
+    d.addEventListener('click', (e) => {
+      const a = e.target.closest('a[href^="https://wa.me/"]');
+      if (a && !a.hasAttribute('data-aviso')) medir('Contact', { content_name: P.nombre });
+    });
+  }
+
   /* ---------- Diálogos ---------- */
   let dialogosAbiertos = 0;
   const alCambiarDialogo = [];
@@ -295,9 +318,12 @@
       enfocarTitulo();
     };
 
+    const datosPixel = (s) => ({ content_name: `${P.nombre} ${s.nombre}`, content_category: P.nombre, value: PRECIO, currency: 'ARS' });
+
     function pintarPrecio() {
       const s = sede;
       const link = (s.linkPago || '').trim();
+      medir('ViewContent', datosPixel(s));
       let boton;
       if (E === 'antes') {
         boton = `<a class="btn btn--ancho" href="${wa(s.whatsapp, `¡Hola Inca ${s.nombre}! Quiero el plan anual de la ${promoNombre()}. ¿Me avisan el ${fechaCorta(desde)} cuando arranque?`)}" target="_blank" rel="noopener" data-aviso>
@@ -356,8 +382,16 @@
       if (bSede) { sede = sedePorId(bSede.dataset.sede); pintarPrecio(); mostrar('precio'); return; }
       if (t.closest('[data-cambiar-sede]')) { mostrar('sedes'); return; }
       if (t.closest('[data-atras]')) { if (historial.length) mostrar(historial.pop(), true); return; }
-      if (t.closest('[data-aviso]')) { enviarPlanilla({ tipo: 'aviso', sede: sede.nombre, precio: pesos(PRECIO), pago: '' }); return; }
-      if (t.closest('[data-ir-pago]')) { enviarPlanilla({ tipo: 'fue-a-pagar', sede: sede.nombre, precio: pesos(PRECIO), pago: 'PagoTIC' }); }   // sigue al link
+      if (t.closest('[data-aviso]')) { enviarPlanilla({ tipo: 'aviso', sede: sede.nombre, precio: pesos(PRECIO), pago: '' }); medir('Lead', datosPixel(sede)); return; }
+      const ir = t.closest('[data-ir-pago]');
+      if (ir) {
+        enviarPlanilla({ tipo: 'fue-a-pagar', sede: sede.nombre, precio: pesos(PRECIO), pago: 'PagoTIC' });
+        if (pixelActivo) {                       // le da un instante al píxel para avisar antes de salir de la página
+          e.preventDefault();
+          medir('InitiateCheckout', datosPixel(sede));
+          setTimeout(() => { location.href = ir.href; }, 350);
+        }
+      }
     });
   }
 
@@ -466,6 +500,7 @@
   }
 
   /* ---------- Arranque ---------- */
+  safe(pixel, 'píxel de Meta');
   safe(prepararDialogos, 'diálogos');
   safe(portada, 'portada');
   safe(sedes, 'sedes');

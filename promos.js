@@ -24,7 +24,11 @@ window.INCA = {
     urlPlanilla: "",
 
     // Email que recibe los pedidos de arrepentimiento.
-    emailContacto: "holasomosinca@gmail.com"
+    emailContacto: "holasomosinca@gmail.com",
+
+    // Número (ID) del píxel de Meta, solo los números. Vacío = el píxel no se carga.
+    // Este número NO es secreto: está bien que esté acá. Nunca pegues un "token de acceso".
+    pixelMeta: "1461651279509172"           // conjunto de datos "Inca Fitness Club - Web"
   },
 
   /* ---------------- LA PROMO ---------------- */
